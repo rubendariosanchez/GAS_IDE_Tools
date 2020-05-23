@@ -1,0 +1,43 @@
+{
+  "name": "GAS - Tools IDE",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "author": "Rubén Sánchez",
+  "description": "Permite acutocompletar código Javascript en el editor de Google Apps Script.",
+  "icons": {
+    "16": "/assets/icon_16.png",
+    "48": "/assets/icon_48.png",
+    "128": "/assets/icon_128.png"
+  },
+  "background": {
+    "scripts": [
+      "js/background.js"
+    ]
+  },
+  "content_scripts": [{
+    "matches": [
+      "https://script.google.com/*/*/edit*"
+    ],
+    "js": [
+      "js/jquery.js",
+      "js/mainFunctions.js"
+    ],
+    "all_frames": false,
+    "run_at": "document_end"
+  }],
+  "web_accessible_resources": [
+    "js/gasTools.js"
+  ],
+  "browser_action": {
+    "default_title": "GAS - Tools IDE",
+    "default_icon": "assets/icon_128.png"
+  },
+  "content_security_policy": "script-src 'self'; object-src 'self'",
+  "permissions": [
+    "declarativeContent",
+    "https://script.google.com/*/*/edit*",
+    "storage",
+    "tabs",
+    "activeTab"
+  ]
+}
