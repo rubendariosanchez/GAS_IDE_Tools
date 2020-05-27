@@ -44,20 +44,30 @@ function initPageContent(evt) {
         return Promise.all([
             $.get(chrome.runtime.getURL('html/options.html')),
             $.get(chrome.runtime.getURL('html/menu.html')),
-            $.get(chrome.runtime.getURL('assets/gasThemes.css'))
+            $.get(chrome.runtime.getURL('assets/gasThemes.css')),
+            $.get(chrome.runtime.getURL('assets/gasHintValidate.css'))
           ])
           .then((content) => {
 
             // agregamos el campo de opciones de temas
             settingModuleTheme(content);
-
+            //addScriptInPage('js/codemirror.js');
+            //addScriptInPage('js/showHint.js');
             // agregamos el script que administra las funciones personalizadas
             addScriptInPage('js/gasAutocomplete.js');
+
+            // Agregamos el css para mostrar los detalles del error
+            $('head').append(
+              $("<style>").html(content[3])
+            );
 
             // Agregamos el Javascript para validar js jshint
             $('head').append(
               $("<script>").attr('src', 'https://cdnjs.cloudflare.com/ajax/libs/jshint/2.11.0/jshint.js')
             );
+
+
+
           }).catch((e) => {
 
             // Mostramos en consola el error

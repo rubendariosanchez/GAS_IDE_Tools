@@ -28,9 +28,12 @@
   }],
   "web_accessible_resources": [
     "js/gasAutocomplete.js",
+    "js/codemirror.js",
+    "js/showHint.js",
     "html/options.html",
     "html/menu.html",
-    "assets/gasThemes.css"
+    "assets/gasThemes.css",
+    "assets/gasHintValidate.css"
   ],
   "browser_action": {
     "default_title": "GAS IDE Tools",
