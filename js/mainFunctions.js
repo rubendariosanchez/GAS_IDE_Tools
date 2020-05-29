@@ -43,8 +43,8 @@ function initPageContent(evt) {
         return Promise.all([
             $.get(chrome.runtime.getURL('html/options.html')),
             $.get(chrome.runtime.getURL('html/menu.html')),
-            $.get(chrome.runtime.getURL('assets/gasThemes.css')),
-            $.get(chrome.runtime.getURL('assets/gasHintValidate.css'))
+            $.get(chrome.runtime.getURL('css/gasThemes.css')),
+            $.get(chrome.runtime.getURL('css/gasHintValidate.css'))
           ])
           .then((content) => {
 

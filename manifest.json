@@ -30,8 +30,8 @@
     "js/gasTools.js",
     "html/options.html",
     "html/menu.html",
-    "assets/gasThemes.css",
-    "assets/gasHintValidate.css"
+    "css/gasThemes.css",
+    "css/gasHintValidate.css"
   ],
   "browser_action": {
     "default_title": "GAS IDE Tools",
