@@ -6,7 +6,6 @@ $(() => {
 
   // Agregamos los elementos en el editor
   initPageContent();
-
 });
 
 /**
@@ -51,10 +50,9 @@ function initPageContent(evt) {
 
             // agregamos el campo de opciones de temas
             settingModuleTheme(content);
-            //addScriptInPage('js/codemirror.js');
-            //addScriptInPage('js/showHint.js');
+
             // agregamos el script que administra las funciones personalizadas
-            addScriptInPage('js/gasAutocomplete.js');
+            addScriptInPage('js/gasTools.js');
 
             // Agregamos el css para mostrar los detalles del error
             $('head').append(
@@ -65,8 +63,6 @@ function initPageContent(evt) {
             $('head').append(
               $("<script>").attr('src', 'https://cdnjs.cloudflare.com/ajax/libs/jshint/2.11.0/jshint.js')
             );
-
-
 
           }).catch((e) => {
 

@@ -162,136 +162,6 @@ GasTools.prototype.init = function() {
 };
 
 /**
- * Permite remover elementos del Dom de acuerdo a una query
- */
-function removeElementsByQuery(query) {
-
-  // Eliminamos cualquier menu de sugerenciancias de Google
-  document.querySelectorAll(query).forEach(function(element) {
-
-    // Eliminamos el elemento
-    element.remove();
-  });
-
-}
-
-/**
- * Valida si debe funcionar comun y corriente el keyup o debe permitir otra tarea
- */
-function verifyKeyUp(cm) {
-
-  // obtenemos el elemento de la lista de autocomplete
-  var __isSuggestion = document.querySelector('#ctnJsAutocomplete .gas-item-selected');
-  console.log('__isSuggestion', __isSuggestion);
-  // se valida que exista un elemento seleccionado
-  if (!__isSuggestion) {
-
-    // se mueve el cursos a una determinada linea
-    return cm.moveV(1, "line");
-  }
-}
-
-// Agregamso funcionalida para cerrar sugerencias
-document.body.addEventListener('click', function() {
-
-  // Eliminamos cualquier instancia que muestre un autocomplete
-  removeElementsByQuery('#ctnJsAutocomplete.autocomplete');
-
-});
-
-// Adding event listener on the page-
-document.addEventListener('keydown', handleInputFocusTransfer);
-
-/**
- * Permite navegar entre el menu de sugerencias
- */
-function handleInputFocusTransfer(e) {
-
-  // se valida si existe un campo con focus
-  var focusableInputElements = document.querySelectorAll('#ctnJsAutocomplete .gas-item-selected');
-
-  // se valida que exista un elemento seleccionado
-  if (focusableInputElements.length > 0) {
-
-    // validamos si oprimio esc
-    if (event.keyCode == 27) {
-
-      // Eliminamos cualquier instancia que muestre un autocomplete
-      removeElementsByQuery('#ctnJsAutocomplete.autocomplete');
-    }
-
-    // validamos si la tecla es ENTER
-    if (e.keyCode === 13) {
-
-      // emulamos el clic en la opción seleccionada
-      focusableInputElements[0].click();
-    }
-
-    // obtenemos todos los elementos de la lista
-    var allElements = document.querySelectorAll('#ctnJsAutocomplete .gwt-Label'),
-      currentIndex = -1;
-
-    // recorremos la cantidad de elementos
-    for (var i = 0; i < allElements.length; i++) {
-
-      // se valida si el elementos es el actual
-      if (allElements[i] == focusableInputElements[0]) {
-
-        // obtenemos el index del elemento
-        currentIndex = i;
-
-        // salidmos del ciclo
-        break;
-      }
-    }
-
-    // se define cual es el proximo elemento
-    var nextIndex = -1;
-
-    // se valida si oprome la flecha de arriba
-    if (e.keyCode === 38) {
-
-      // validamos si el contados es cero
-      if (currentIndex == 0) {
-
-        // definimos como anterior el ultimo
-        nextIndex = allElements.length - 1;
-      } else {
-
-        // definimos cual es proximo elemento
-        nextIndex = currentIndex - 1;
-      }
-
-    } else if (e.keyCode === 40) {
-
-      // se valida si el actual index es igual a la cantidad maxima
-      if (currentIndex == allElements.length - 1) {
-
-        // definimos como nuevo el inicio de la lisat
-        nextIndex = 0;
-      } else {
-
-        // definimos cual es proximo elemento
-        nextIndex = currentIndex + 1;
-      }
-
-    }
-
-    // se valida si el proximo index es diferente a -1
-    if (nextIndex != -1) {
-      // removemos la clase del elemento actual
-      focusableInputElements[0].classList.remove('gas-item-selected');
-
-      // agregamos la clse al elemento
-      allElements[nextIndex].classList.add('gas-item-selected');
-
-      // mantenemos visible el items que se maneja con el scroll
-      allElements[nextIndex].scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-    }
-  }
-}
-
-/**
  * Creamos propiedad para almacenar la lista de palabras claves
  */
 GasTools.prototype.keywordsList = {
@@ -425,18 +295,6 @@ GasTools.prototype.showHint = function(editor, suggestions) {
   document.body.appendChild(contentSuggestions);
 }
 
-function getOffset(element) {
-  if (!element.getClientRects().length) {
-    return { top: 0, left: 0 };
-  }
-
-  let rect = element.getBoundingClientRect();
-  let win = element.ownerDocument.defaultView;
-  return ({
-    top: rect.top + win.pageYOffset,
-    left: rect.left + win.pageXOffset
-  });
-}
 /**
  * Metodo para obtener os datos necesario para mostrar el autocompletable
  */
@@ -847,20 +705,6 @@ GasTools.prototype.clearErrors = function(gutterElement) {
   });
 }
 
-/**
- * Permite obtener la posisión dentro del texto
- */
-function Pos(line, ch, sticky) {
-
-  // Se valida existe el tercer parametro
-  if (sticky === void 0) sticky = null;
-
-  if (!(this instanceof Pos)) { return new Pos(line, ch, sticky) }
-  this.line = line;
-  this.ch = ch;
-  this.sticky = sticky;
-}
-
 // se llama la función que inicializar el Ide personalizado
 initCustomIde();
 
@@ -897,6 +741,171 @@ function initCustomIde() {
   // configuramos en primera instancia el primer editor
   settingEditorGas();
 
+  // Agregamso funcionalida para cerrar sugerencias
+  document.body.addEventListener('click', function() {
+
+    // Eliminamos cualquier instancia que muestre un autocomplete
+    removeElementsByQuery('#ctnJsAutocomplete.autocomplete');
+  });
+
+  // Adding event listener on the page-
+  document.addEventListener('keydown', handleInputFocusTransfer);
+
+}
+
+/**
+ * Permite obtener la información de donde se encuentra un elemento dentro del dom
+ */
+function getOffset(element) {
+
+  // Validamos si no existe espacios superiores o a la izquieda del elemento
+  if (!element.getClientRects().length) {
+    return { top: 0, left: 0 };
+  }
+
+  // obtenemos la lista de elementos que estan por encima y por debajo del elemento en referencia
+  var rect = element.getBoundingClientRect();
+  var win = element.ownerDocument.defaultView;
+
+  // se retorna un objeto con la información requerida de la posición del elemento
+  return ({
+    top: rect.top + win.pageYOffset,
+    left: rect.left + win.pageXOffset
+  });
+}
+
+/**
+ * Permite obtener la posisión dentro del texto
+ */
+function Pos(line, ch, sticky) {
+
+  // Se valida existe el tercer parametro
+  if (sticky === void 0) sticky = null;
+
+  if (!(this instanceof Pos)) { return new Pos(line, ch, sticky) }
+  this.line = line;
+  this.ch = ch;
+  this.sticky = sticky;
+}
+
+
+/**
+ * Permite remover elementos del Dom de acuerdo a una query
+ */
+function removeElementsByQuery(query) {
+
+  // Eliminamos cualquier menu de sugerenciancias de Google
+  document.querySelectorAll(query).forEach(function(element) {
+
+    // Eliminamos el elemento
+    element.remove();
+  });
+
+}
+
+/**
+ * Valida si debe funcionar comun y corriente el keyup o debe permitir otra tarea
+ */
+function verifyKeyUp(cm) {
+
+  // obtenemos el elemento de la lista de autocomplete
+  var __isSuggestion = document.querySelector('#ctnJsAutocomplete .gas-item-selected');
+  console.log('__isSuggestion', __isSuggestion);
+  // se valida que exista un elemento seleccionado
+  if (!__isSuggestion) {
+
+    // se mueve el cursos a una determinada linea
+    return cm.moveV(1, "line");
+  }
+}
+
+/**
+ * Permite navegar entre el menu de sugerencias
+ */
+function handleInputFocusTransfer(e) {
+
+  // se valida si existe un campo con focus
+  var focusableInputElements = document.querySelectorAll('#ctnJsAutocomplete .gas-item-selected');
+
+  // se valida que exista un elemento seleccionado
+  if (focusableInputElements.length > 0) {
+
+    // validamos si oprimio esc
+    if (event.keyCode == 27) {
+
+      // Eliminamos cualquier instancia que muestre un autocomplete
+      removeElementsByQuery('#ctnJsAutocomplete.autocomplete');
+    }
+
+    // validamos si la tecla es ENTER
+    if (e.keyCode === 13) {
+
+      // emulamos el clic en la opción seleccionada
+      focusableInputElements[0].click();
+    }
+
+    // obtenemos todos los elementos de la lista
+    var allElements = document.querySelectorAll('#ctnJsAutocomplete .gwt-Label'),
+      currentIndex = -1;
+
+    // recorremos la cantidad de elementos
+    for (var i = 0; i < allElements.length; i++) {
+
+      // se valida si el elementos es el actual
+      if (allElements[i] == focusableInputElements[0]) {
+
+        // obtenemos el index del elemento
+        currentIndex = i;
+
+        // salidmos del ciclo
+        break;
+      }
+    }
+
+    // se define cual es el proximo elemento
+    var nextIndex = -1;
+
+    // se valida si oprome la flecha de arriba
+    if (e.keyCode === 38) {
+
+      // validamos si el contados es cero
+      if (currentIndex == 0) {
+
+        // definimos como anterior el ultimo
+        nextIndex = allElements.length - 1;
+      } else {
+
+        // definimos cual es proximo elemento
+        nextIndex = currentIndex - 1;
+      }
+
+    } else if (e.keyCode === 40) {
+
+      // se valida si el actual index es igual a la cantidad maxima
+      if (currentIndex == allElements.length - 1) {
+
+        // definimos como nuevo el inicio de la lisat
+        nextIndex = 0;
+      } else {
+
+        // definimos cual es proximo elemento
+        nextIndex = currentIndex + 1;
+      }
+
+    }
+
+    // se valida si el proximo index es diferente a -1
+    if (nextIndex != -1) {
+      // removemos la clase del elemento actual
+      focusableInputElements[0].classList.remove('gas-item-selected');
+
+      // agregamos la clse al elemento
+      allElements[nextIndex].classList.add('gas-item-selected');
+
+      // mantenemos visible el items que se maneja con el scroll
+      allElements[nextIndex].scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+    }
+  }
 }
 
 /**

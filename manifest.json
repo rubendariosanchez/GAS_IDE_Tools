@@ -27,9 +27,7 @@
     "run_at": "document_end"
   }],
   "web_accessible_resources": [
-    "js/gasAutocomplete.js",
-    "js/codemirror.js",
-    "js/showHint.js",
+    "js/gasTools.js",
     "html/options.html",
     "html/menu.html",
     "assets/gasThemes.css",

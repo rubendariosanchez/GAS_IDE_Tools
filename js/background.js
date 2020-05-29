@@ -3,7 +3,7 @@
 /*
  * Perimte definir en que origin va a funcionar el complemento
  */
-/*chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener(() => {
   chrome.declarativeContent.onPageChanged.removeRules(undefined, () => {
     chrome.declarativeContent.onPageChanged.addRules([{
       conditions: [
@@ -14,4 +14,4 @@
       actions: [new chrome.declarativeContent.ShowPageAction()]
     }]);
   });
-});*/
+});
