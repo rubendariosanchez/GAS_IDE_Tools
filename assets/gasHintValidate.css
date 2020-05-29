@@ -1,3 +1,31 @@
+#ctnJsAutocomplete {
+  visibility: visible;
+  position: absolute;
+  overflow: visible;
+}
+
+#ctnJsAutocomplete .scroll-wrapper {
+  overflow: auto;
+  position: relative;
+  zoom: 1;
+  width: 364px;
+}
+
+#ctnJsAutocomplete .scroll-wrapper>div {
+  position: relative;
+  zoom: 1;
+}
+
+#ctnJsAutocomplete .gwt-Label:hover,
+.gas-item-selected {
+  background-color: #e0e0e0;
+  color: #222;
+  transition: background 0;
+  -webkit-transition: background 0;
+  -moz-transition: background 0;
+  cursor: pointer;
+}
+
 .CodeMirror-hints {
   position: absolute;
   z-index: 10;
