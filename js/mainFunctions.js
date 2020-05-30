@@ -1,7 +1,7 @@
 "use strict";
 // Google Apps Script se basa del proyecto "CodeMirror" : https://codemirror.net/
 // Proyecto que nos puede ayudar - https://github.com/leonhartX/gas-github/blob/master/src
-// iniciamos el aplicativo, despues de agregar el contenido HTML
+// iniciamos el aplicativo, después de agregar el contenido HTML
 $(() => {
 
   // Agregamos los elementos en el editor
@@ -20,14 +20,14 @@ function initPageContent(evt) {
   var attempts = 0;
 
   /**
-   * Permite checkear si la pagina fue cargada con exito, antes de aplicar alguna cambio
+   * Permite chequear si la pagina fue cargada con éxito, antes de aplicar alguna cambio
    */
   function checkLoadPage() {
 
     // aumentamos la cantidad de intentos
     attempts++;
 
-    // referenciamos el elemneto del editor
+    // referenciamos el elemento del editor
     var editorElement = document.querySelector('.CodeMirror');
 
     // Validamos si el elemento del editor ya fue cargado o si ya supero la cantidad de intentos definidos  
@@ -36,7 +36,7 @@ function initPageContent(evt) {
       // Eliminamos ciclo creado
       clearInterval(editorStateInterval);
 
-      // se valida si fue existoso obtener el elemento
+      // se valida si fue exitoso obtener el elemento
       if (editorElement) {
 
         // Agregamos el contenido HTML para las funciones respectiva
@@ -90,7 +90,7 @@ function addScriptInPage(fileName) {
   // Agregar el archivo y no olvidar agregarlo en la sesión web_accessible_resources en el manifest.json
   scriptElement.src = chrome.runtime.getURL(fileName);
 
-  // Validamos para que cuando se cargue el script se eeimine el elemento creado temporalmenet
+  // Validamos para que cuando se cargue el script se elimine el elemento creado temporalmente
   scriptElement.onload = function() {
 
     // Eliminamos el elemento

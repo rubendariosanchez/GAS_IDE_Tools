@@ -17,7 +17,7 @@ function settingModuleTheme(contentHtml) {
   // definimos el texto que deseamos ajustar para que se muestre correctamente el cursor en el editor
   var classCursor = escapeRegExp('.CodeMirror-cursor{z-index:10;position:absolute;visibility:hidden;border-left:1px solid black!important}');
 
-  // buscamos en el encabezado las etiquetas style del encabezado con el objetivo de eliminar el atributo important
+  // buscamos en el encabezado las etiquetas style el objetivo de eliminar el atributo important usado en el cursor del editor
   $('head').find('style').each(function() {
 
     //obtenemos el elemento actual
@@ -33,10 +33,10 @@ function settingModuleTheme(contentHtml) {
     $currentStyle.html(styleValue);
   });
 
-  // Establcemos el efecto de hover al boton de tema
+  // Establecemos el efecto de hover al botón de tema
   $('#sltGasTheme').hover(function() {
 
-    // agregamos la clse que muestra el hover
+    // agregamos la clase que muestra el hover
     $('#sltGasTheme').addClass('goog-toolbar-menu-button-hover');
   }, function() {
 
@@ -55,7 +55,7 @@ function settingModuleTheme(contentHtml) {
 }
 
 /**
- * Permite agregar caracteres de escape para que la experesión regular función sin problemas
+ * Permite agregar caracteres de escape para que la expresión regular función sin problemas
  */
 function escapeRegExp(string) {
 
@@ -63,7 +63,7 @@ function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 /**
- * Establecemos el tema por defceto o el guardado por el usuario
+ * Establecemos el tema por defecto o el guardado por el usuario
  */
 function setThemeIdeGas(newTheme, themeName, isSave) {
 
@@ -120,8 +120,8 @@ function eventsModuleTheme() {
 
   // Agregamos el evento para mostrar la lista de temas
   $(document).on('click', '#sltGasTheme', function(event) {
-    console.log(event);
-    // validamos si existe algun itema para mostrar
+
+    // validamos si existe algún item para mostrar
     if ($('.gas-themes-menu div.goog-menuitem').length > 0) {
 
       // Agregamos la clase de apertura de una lista
@@ -132,10 +132,10 @@ function eventsModuleTheme() {
     }
   });
 
-  // Adicionamos el eveto para que agregue la clase de hover al elemento
+  // Adicionamos el evento para que agregue la clase de hover al elemento
   $(document).on('mouseover', '.gas-custom-item', function(event) {
 
-    // referenciamos el lemento como tipo Jquery
+    // referenciamos el elemento como tipo Jquery
     var target = $(event.target);
 
     // se valida si el elemento NO es un item
@@ -149,16 +149,16 @@ function eventsModuleTheme() {
     target.addClass('goog-menuitem-highlight');
   });
 
-  // Adicionamos el eveto para remover la clase de hover al elemento
+  // Adicionamos el evento para remover la clase de hover al elemento
   $(document).on('mouseleave', '.gas-custom-item', function(event) {
 
-    // referenciamos el lemento como tipo Jquery
+    // referenciamos el elemento como tipo Jquery
     var target = $(event.target);
 
     // se valida si el elemento NO es un item
     if (!target.hasClass('gas-custom-item')) {
 
-      // consultamos el padre con la clse de item
+      // consultamos el padre con la clase de item
       target = target.parent('.gas-custom-item');
     }
 
@@ -178,11 +178,11 @@ function updateThemeIdeGas(event, notInterval) {
     // validamos si existe la propiedad y existe clase
     if (item && item.gasToolsProperties && item.gasToolsProperties.classSelected) {
 
-      // establecemos la clase almacenanda
+      // establecemos la clase almacenada
       setThemeIdeGas(item.gasToolsProperties.classSelected, item.gasToolsProperties.themeName);
     } else {
 
-      // Establecemos la clase por defceto
+      // Establecemos la clase por defecto
       setThemeIdeGas('cm-s-default', 'Defecto');
     }
 

@@ -1,7 +1,7 @@
 "use strict";
 
 /*
- * Perimte definir en que origin va a funcionar el complemento
+ * Permite definir en que origin va a funcionar el complemento
  */
 chrome.runtime.onInstalled.addListener(() => {
   chrome.declarativeContent.onPageChanged.removeRules(undefined, () => {

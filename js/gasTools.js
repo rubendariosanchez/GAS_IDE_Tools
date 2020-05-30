@@ -1,5 +1,5 @@
 /**
- * Creamos la clase de funciones personalizadas del editor, la trabajamos como protoripo para que funcione en todos las versiones de chrome
+ * Creamos la clase de funciones personalizadas del editor, la trabajamos como prototipo para que funcione en todos las versiones de chrome
  */
 function GasTools(element) {
 
@@ -17,7 +17,7 @@ function GasTools(element) {
 }
 
 /**
- * Establcemos las teclas que no aplican para el autocompletado
+ * Establecemos las teclas que no aplican para el autocompletado
  */
 GasTools.prototype.notKeys = {
   //"8": "backspace",
@@ -72,14 +72,14 @@ GasTools.prototype.notKeys = {
 };
 
 /**
- * Metodo para inicializar la clase
+ * Método para inicializar la clase
  */
 GasTools.prototype.init = function() {
 
   // validamos si la instancia del editor existe
   if (this.editor) {
-    console.log(this);
-    // obtenemso el nombre del archivo a procesar
+
+    // obtenemos el nombre del archivo a procesar
     var fileName = document.querySelector('.gwt-TabLayoutPanelTabs .gwt-TabLayoutPanelTab-selected .gwt-Label').innerHTML;
 
     // referenciamos el this de la clase
@@ -101,7 +101,7 @@ GasTools.prototype.init = function() {
           if (!__isSuggestionUp) {
 
             // se mueve el cursos a una determinada linea
-            return cm.moveV(-1, "line");
+            return cm.execCommand('goLineUp'); //cm.moveV(-1, "line");
           }
         },
         "Down": function(cm) {
@@ -112,25 +112,39 @@ GasTools.prototype.init = function() {
           if (!__isSuggestionDown) {
 
             // se mueve el cursos a una determinada linea
-            return cm.moveV(1, "line");
+            return cm.execCommand('goLineDown');
           }
+        },
+        "Enter": function(cm) {
+          // obtenemos el elemento de la lista de autocomplete
+          var __isSuggestionEnter = document.querySelector('#ctnJsAutocomplete .gas-item-selected');
+
+          // se valida que exista un elemento seleccionado
+          if (!__isSuggestionEnter) {
+
+            // se mueve el cursos a una determinada linea
+            return cm.execCommand('newlineAndIndent');
+          }
+        },
+        "Ctrl-Space": function(cm) {
+          console.log('Enter', cm);
         }
       });
     }
 
 
-    // agregamos un evento al area de textos del editor
+    // agregamos un evento al área de textos del editor
     this.editor.getInputField().addEventListener('keyup', function(event) {
-
+      console.log(event);
       // se valida si es un archivo html
       if (extension == 'html') {
 
         // obtenemos el elemento de la lista de autocomplete
         var __isSuggestion = document.querySelector('#ctnJsAutocomplete .gas-item-selected');
 
-        // Eliminamos cualquier menu de sugerenciancias de Google
+        // Eliminamos cualquier menu de sugerencias de Google
         removeElementsByQuery('.gwt-PopupPanel.autocomplete:not(#ctnJsAutocomplete)');
-
+        if (event.keyCode == 32 && event.ctrlKey) return false;
         // referenciamos el cursor y obtenemos el token
         var __Cursor = _this.editor.getCursor();
         var __Token = _this.editor.getTokenAt(__Cursor);
@@ -143,7 +157,7 @@ GasTools.prototype.init = function() {
 
         } else if (!__isSuggestion || (__isSuggestion && [38, 40].indexOf(event.keyCode) == -1)) { //Se valida si que no exista sugerencias o si existe que no sea la flecha de arriba o la de abajo
 
-          // Eliminamos cualquier menu de sugerenciancias de Google y las personalizas
+          // Eliminamos cualquier menu de sugerencias de Google y las personalizas
           removeElementsByQuery('.gwt-PopupPanel.autocomplete');
         }
       }
@@ -177,7 +191,7 @@ GasTools.prototype.keywordsList = {
 };
 
 /**
- * Metodo para autocompletar texto de js
+ * Método para autocompletar texto de js
  */
 GasTools.prototype.autocomplete = function(fileName) {
 
@@ -202,49 +216,88 @@ GasTools.prototype.autocomplete = function(fileName) {
 };
 
 /**
- * Metodo para obtener os datos necesario para mostrar el autocompletable
+ * Método para obtener os datos necesario para mostrar el autocompletable
  */
 GasTools.prototype.showHint = function(editor, suggestions) {
 
   // Eliminamos cualquier instancia que muestre un autocomplete
-  document.querySelectorAll('.gwt-PopupPanel.autocomplete').forEach(function(element) {
+  removeElementsByQuery('.gwt-PopupPanel.autocomplete:not(#ctnJsAutocomplete)');
 
-    // Eliminamos el elemento
-    element.remove();
-  });
+  // validamos si no hay necesidad de mostrar las sugerencias
+  if (!suggestions || suggestions.list.length == 0) {
 
-  // validamo si no hay necesidad de mostrar las sugerencias
-  if (!suggestions || suggestions.list.length == 0) return false;
+    // eliminamos la lista de sugerencias de js
+    removeElementsByQuery('#ctnJsAutocomplete');
+
+    // salimos del ciclo
+    return false;
+
+  };
 
   // obtenemos la posición del elemento
   var offset = getOffset(editor.getInputField());
 
   // definimos el left y el top
   var left = offset.left,
-    top = (offset.top + 18);
+    top = (offset.top + 20);
 
-  // creamos el contenedor de las opciones
-  var contentSuggestions = document.createElement('div');
-  contentSuggestions.setAttribute("id", "ctnJsAutocomplete");
-  contentSuggestions.setAttribute("class", "gwt-PopupPanel autocomplete");
-  contentSuggestions.setAttribute("style", "left: " + left + "px; top: " + top + "px;");
+  // Se valida si ya existe el contenedor con el objetivo de no volver a crearlo
+  var contentSuggestions = document.querySelector('#ctnJsAutocomplete');
 
-  // creamos el contenedor secundario
-  var contentSecondary = document.createElement('div');
-  contentSecondary.setAttribute("class", "popupContent");
+  // referenciamos por si ya existe el elemento
+  if (contentSuggestions) {
 
-  // creamos el contenedor del scroll
-  var contentScroll = document.createElement('div');
-  contentScroll.setAttribute("class", "scroll-wrapper");
+    // establecemos la nueva posición
+    contentSuggestions.setAttribute("style", "left: " + left + "px; top: " + top + "px;");
 
-  // creamos el contenedor principal de los items
-  var contentMainItems = document.createElement('div');
+    // obtenemos el contenedor actual
+    var currentContentItems = document.querySelector('#ctnJsAutocomplete .scroll-wrapper div[role="menu"]');
 
-  // creamos el contenedor de los items
-  var contentItems = document.createElement('div');
-  contentItems.setAttribute("role", "menu");
-  contentItems.setAttribute("aria-hidden", "false");
+    // Eliminamos el contenido
+    currentContentItems.innerHTML = '';
 
+    // agregamos las sugerencias
+    this.addSuggestions(editor, suggestions, currentContentItems);
+  } else {
+
+    // creamos el contenedor de las opciones
+    contentSuggestions = document.createElement('div');
+    contentSuggestions.setAttribute("id", "ctnJsAutocomplete");
+    contentSuggestions.setAttribute("class", "gwt-PopupPanel autocomplete");
+    contentSuggestions.setAttribute("style", "left: " + left + "px; top: " + top + "px;");
+
+    // creamos el contenedor secundario
+    var contentSecondary = document.createElement('div');
+    contentSecondary.setAttribute("class", "popupContent");
+
+    // creamos el contenedor del scroll
+    var contentScroll = document.createElement('div');
+    contentScroll.setAttribute("class", "scroll-wrapper");
+
+    // creamos el contenedor principal de los items
+    var contentMainItems = document.createElement('div');
+
+    // creamos el contenedor de los items
+    var contentItems = document.createElement('div');
+    contentItems.setAttribute("role", "menu");
+    contentItems.setAttribute("aria-hidden", "false");
+
+    // agregamos las sugerencias
+    this.addSuggestions(editor, suggestions, contentItems);
+
+    // agrupamos cada uno de los elementos
+    contentMainItems.appendChild(contentItems);
+    contentScroll.appendChild(contentMainItems);
+    contentSecondary.appendChild(contentScroll);
+    contentSuggestions.appendChild(contentSecondary);
+    document.body.appendChild(contentSuggestions);
+  }
+}
+
+/**
+ * Método que permite agregar cada una de las sugerencias
+ */
+GasTools.prototype.addSuggestions = function(editor, suggestions, contentItems) {
   // recorremos cada una de las sugerencias
   for (var i = 0; i < suggestions.list.length; i++) {
 
@@ -254,10 +307,10 @@ GasTools.prototype.showHint = function(editor, suggestions) {
     item.setAttribute("role", "menuitem");
     item.innerHTML = suggestions.list[i];
 
-    // Agregamos el evento clic para que reemplce los datos
+    // Agregamos el evento clic para que reemplacé los datos
     item.onclick = function(e) {
 
-      // obtenenemos el texto
+      // obtenemos el texto
       var newText = e.target.innerHTML;
 
       // obtenemos la nueva posición
@@ -266,7 +319,7 @@ GasTools.prototype.showHint = function(editor, suggestions) {
       // actualizamos el valor
       editor.replaceRange(newText, suggestions.from, suggestions.to);
 
-      // Establcemos el focus en el editor
+      // Establecemos el focus en el editor
       editor.focus();
 
       // Colocamos el cursor en la nueva posición
@@ -286,17 +339,10 @@ GasTools.prototype.showHint = function(editor, suggestions) {
     // agrupamos cada uno de los elementos
     contentItems.appendChild(item);
   }
-
-  // agrupamos cada uno de los elementos
-  contentMainItems.appendChild(contentItems);
-  contentScroll.appendChild(contentMainItems);
-  contentSecondary.appendChild(contentScroll);
-  contentSuggestions.appendChild(contentSecondary);
-  document.body.appendChild(contentSuggestions);
 }
 
 /**
- * Metodo para obtener os datos necesario para mostrar el autocompletable
+ * Método para obtener os datos necesario para mostrar el autocompletable
  */
 GasTools.prototype.scriptHint = function(editor, keywordsList) {
 
@@ -305,7 +351,7 @@ GasTools.prototype.scriptHint = function(editor, keywordsList) {
     token = editor.getTokenAt(cur),
     tprop = token;
 
-  // Se valida si existe un tipo y es un comentario o string para salir y no mostrar ningun autocompletable
+  // Se valida si existe un tipo y es un comentario o string para salir y no mostrar ningún autocompletable
   if (/\b(?:string|comment|tag)\b/.test(token.className)) return;
 
   // obtenemos el estado
@@ -323,7 +369,7 @@ GasTools.prototype.scriptHint = function(editor, keywordsList) {
       className: token.string == "." ? "property" : null
     };
   }
-  console.log('token', token);
+
   // Si es una propiedad, averigüe de qué es una propiedad.
   while (tprop.className == "property") {
     tprop = editor.getTokenAt(Pos(cur.line, tprop.start));
@@ -332,6 +378,7 @@ GasTools.prototype.scriptHint = function(editor, keywordsList) {
     if (!context) var context = [];
     context.push(tprop);
   }
+
   // retornamos la información de las posibles palabras a completar
   return {
     list: this.getCompletions(token, context, keywordsList),
@@ -362,7 +409,7 @@ GasTools.prototype.getCompletions = function(token, context, keywordsList) {
   }
 
   /**
-   * Permite obtener las terminaciones, es decir las propiedades o metodos nativas de un tipo de elemento
+   * Permite obtener las terminaciones, es decir las propiedades o métodos nativas de un tipo de elemento
    */
   function gatherCompletions(obj) {
 
@@ -392,7 +439,7 @@ GasTools.prototype.getCompletions = function(token, context, keywordsList) {
       }
       return false;
     }
-    // Se usa el metodo de indexOf si la instancia de Array ya lo tiene definido
+    // Se usa el método de indexOf si la instancia de Array ya lo tiene definido
     return arr.indexOf(item) != -1;
   }
 
@@ -411,7 +458,7 @@ GasTools.prototype.getCompletions = function(token, context, keywordsList) {
       base = base || window[obj.string];
     } else if (obj.className == "string") {
 
-      // no se define nunguna vase
+      // no se define ninguna base
       base = "";
     } else if (obj.className == "atom") {
       base = 1;
@@ -425,12 +472,12 @@ GasTools.prototype.getCompletions = function(token, context, keywordsList) {
       }
     }
 
-    // Se valida que realmente se tenga un objeto base y sea la busqueda del contexto como tal para tomar como base la ultima concurrencia
+    // Se valida que realmente se tenga un objeto base y sea la búsqueda del contexto como tal para tomar como base la ultima concurrencia
     while (base != null && context.length) {
       base = base[context.pop().string];
     }
 
-    // si aun existe una base en envia para analizar cada uno de los items y agregarlos a la lista
+    // si aun existe una base en enviá para analizar cada uno de los items y agregarlos a la lista
     if (base != null) gatherCompletions(base);
   } else {
     // Si no, solo mira el objeto de la ventana y cualquier ámbito local
@@ -446,7 +493,7 @@ GasTools.prototype.getCompletions = function(token, context, keywordsList) {
 }
 
 /**
- * Metodo crea el elemento para mostrar el error
+ * Método crea el elemento para mostrar el error
  */
 GasTools.prototype.makeMarkerError = function(gutterElement, line, reasonList) {
 
@@ -470,7 +517,7 @@ GasTools.prototype.makeMarkerError = function(gutterElement, line, reasonList) {
     divReason.innerHTML = reasonList[i].reason;
     errorMessage.appendChild(divReason);
 
-    // valdiamos si es un warning
+    // validamos si es un warning
     if (reasonList[i].severity == 'warning') {
 
       // aumentamos el contador de warnings
@@ -487,7 +534,7 @@ GasTools.prototype.makeMarkerError = function(gutterElement, line, reasonList) {
     }
   }
 
-  // validmos si solo existe warnings
+  // validamos si solo existe warnings
   if (warningCount > 0 && errorCount == 0) {
 
     // Agregamos la clase de warning
@@ -505,14 +552,13 @@ GasTools.prototype.makeMarkerError = function(gutterElement, line, reasonList) {
 }
 
 /**
- * Metodo que permite mostrar los errores en el editor
+ * Método que permite mostrar los errores en el editor
  */
 GasTools.prototype.showErrorIde = function(fileName) {
-  console.log('fileName', fileName);
 
   // obtenemos la extensión del archivo
   var extension = fileName.replace(/^.*\./, '');
-  console.log(extension);
+
   // validamos si la extensión es diferente de gs y html
   if (['gs', 'html'].indexOf(extension) == -1) return false;
 
@@ -525,19 +571,19 @@ GasTools.prototype.showErrorIde = function(fileName) {
   // se valida si la extensión es 'GS'
   if (extension == 'gs') {
 
-    // se procesa con la libreria de JsHint - https://thecodebarbarian.com/building-a-code-editor-with-codemirror.html
+    // se procesa con la librería de JsHint - https://thecodebarbarian.com/building-a-code-editor-with-codemirror.html
     JSHINT(currValue);
 
     // Se consulta la lista de errores
     errors = Array.isArray(JSHINT.errors) ? JSHINT.errors : [];
-    console.log(errors);
+
   } else {
 
     // obtenemos los errores del archivo HTML
     errors = this.getValueByHtml(currValue);
   }
 
-  // obtenemos el contenedor de los numeros de lineas
+  // obtenemos el contenedor de los números de lineas
   var gutterElement = this.editor.getGutterElement().querySelector('div.CodeMirror-gutter-text');
 
   // Eliminamos cada uno de los errores existentes
@@ -574,15 +620,14 @@ GasTools.prototype.getValueByHtml = function(valueHtml) {
       script_line.push(i);
     }
   });
-  console.log(script_line);
 
-  // definimos la expresión regular que permite otener el contenido dentro de un script
+  // definimos la expresión regular que permite obtener el contenido dentro de un script
   var regexp = /<script\b[^>]*>([\s\S]*?)<\/script>/gm;
 
   // obtenemos la cantidad de etiquetas
   var scriptTags = valueHtml.match(regexp);
 
-  // validamos si es null la cantdad de tags para salir de la función
+  // validamos si es null la cantidad de tags para salir de la función
   if (!scriptTags) return errors;
 
   // obtener todo el contenido de la etiqueta del script
@@ -591,7 +636,7 @@ GasTools.prototype.getValueByHtml = function(valueHtml) {
     // Agregamos el contenido de cada script
     scriptContent.push(regexp.exec(scriptTags[0])[1]);
   }
-  console.log(scriptContent);
+
   // validamos si existe mas de un script en el documento
   if (scriptContent.length > 0) {
 
@@ -751,6 +796,84 @@ function initCustomIde() {
   // Adding event listener on the page-
   document.addEventListener('keydown', handleInputFocusTransfer);
 
+  // Agregamso funcionalida para cerrar sugerencias
+  document.body.addEventListener('click', function() {
+
+    // Eliminamos cualquier instancia que muestre un autocomplete
+    removeElementsByQuery('#ctnJsAutocomplete.autocomplete');
+  });
+
+  // se establece el observador para actualizar el icono
+  setCustomIcons();
+}
+
+
+/**
+ * Permite establecer la función de establecer los iconos
+ */
+function setCustomIcons() {
+  // Elegimos el elemento donde se va a crear un observador  para identificar si se realiza alguna modificación
+  // se usa un API de Javascript: https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
+  var targetNode = document.getElementsByClassName('project-items-list')[0];
+
+  // Se deine los parametros de configuración del observador: https://developer.mozilla.org/en-US/docs/Web/API/MutationObserverInit
+  var configObserver = { attributes: true, childList: true, subtree: true };
+
+  // Crear una instancia de observador vinculada a la función de devolución de llamada
+  var observerDom = new MutationObserver(function(mutationsList) {
+
+    // recorremos cada uno de las mutaciónes o cambios existentes
+    for (var i = 0; i < mutationsList.length; i++) {
+
+      // Valdiamos si el cambio fuen el la lista de hijos
+      if (mutationsList[i].type === 'childList') {
+
+        // se actualiza el icono
+        updateCustomIcon();
+      }
+    }
+  });
+
+  // Comience a observar el nodo objetivo para las mutaciones configuradas
+  observerDom.observe(targetNode, configObserver);
+
+  // se actualiza el icono
+  updateCustomIcon();
+}
+
+/**
+ * Permite actualizar el icono de la lista de archivos
+ */
+function updateCustomIcon() {
+  // Recorremos cada uno de los items que no tienen el icono personalizado
+  document.querySelectorAll('.project-items-list>div:not(.gas-custom-icon)').forEach(function(element) {
+
+    // Obtenemos el nombre del archivo
+    var fileName = element.getAttribute('aria-label');
+
+    // se valida que existe nombre
+    if (fileName) {
+
+      // obtenemos la extensión del archivo
+      var extension = fileName.replace(/^.*\./, '');
+
+      // definimos el icono para cada tipo de extensión
+      var iconType = {
+        'html': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAbwAAAG8B8aLcQwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAKWSURBVDiNjZM7aFNhFMd/J7k1XJObaIJpFRXUKgUdxJpSUVChqIOiiCA2o6I4WOpQKKhQF0EdFKylqAgK6uIiSDv4GGqxioiPQahtrYKPoqk098bEJjf3OMS0qTr4n77v4/xfBz5RVcoQkd3t7e0TwWBw/9jY2Jra2tr5ruuSSCReDAwMfOrp6env6+vrpgK+irPU1dWd7O3tvScizUNDQ3XxeDzS1dUVSSaTm4aHh5OxWKzTtu1WQMokf0dHB4A4jnN3fHx8fUtLi5imSTQapampiVwuR1tbG/l8nsHBQd/o6Oi2hoaGRCAQuAUgqopt263eyOtz/EjzX5ht4atdfTQcDp8X27ZXAC9zZw6YxZd9f80agZl3zwNZ3oh5/HoOWG2oarOImGJF/2lmzq1sDIUsuJEogCki+wwRqQeQSAyA0N5WZm9JTm/ZX0F+cpv8jdOUzVR1rQGUBMIlAVTxxxeSvXcLii5V5nQC78Mr1Js2A+oNESmoKr7fAt5ECoDMzbMUU1+wamZWUI+pWREpGEA/0FxO4KVLAvMuPwVVpIL888phvPs9+MNTCfqnBUqLoTD6hsztzinSrBD4YoswEjvRHxN/Vug3VPUBUBArWgWgbp5A/Waca6eYfP4QqwaMtTtKAnYKLYKEowAFVX1gWJb1NpPJHCES6wbQrEPVkpUEdx3CZ83BsIpUbdhX6u+kSgnCMUSkJRQKvUVVUVUcx7nwZc8y/by9RjN3Lmnh44iWUfz6XvMPr6p9YIF+3rVI0+l0Z5knFb/R/+3U/kfus/vrcPOlh+rFhKoNvG/vAHAnfRRWbH0879jVjYALzBAA4PuVk43Fj0MX9fvYUi/1KRwIZMULxrMaXTosC1cdih088bRy/heyQCYG+LP19AAAAABJRU5ErkJggg==',
+        'gs': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAeFBMVEUAAADQ0PrO0vvU2PvP0f3x8f7P0fzv7/7P0vzj5f3tv3r1uFP1uVXvvHHtvXHqwYfpvoLP0vzb3f3Y2v3////m6P3y8/7e4P3o6f7j5f3S1fzV2PzR0/zr7P7yu2H/sin/1If/2JL/zXX/w1j/2ZX/xFr/2JMAAACZakwFAAAAEXRSTlMAMURBe8S+wL+d4u/uu7lXdvBwsEwAAAABYktHRACIBR1IAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAB3RJTUUH5AUeDxEoVBeQPwAAAHxJREFUGNN1z9sSgiAQBuAtswg1kqI8Wyq+/yO2LIt043+xh2+GnQEA4HCkJMA5lT46ZTgzPJ4XD4KhNK9rgLfbsYgAlYMqgq6btm1qvUFn6EQXn/QO+r8bITsghy2SIBsxn++ENSPIcZoXu2LLCQqcrJ0stpv/jLpzFC4/H08NqmObH7EAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjAtMDUtMzBUMTU6MTc6NDArMDA6MDBGtCjqAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDIwLTA1LTMwVDE1OjE3OjQwKzAwOjAwN+mQVgAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAAASUVORK5CYII=',
+        'json': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAA3NCSVQICAjb4U/gAAAACXBIWXMAAAP0AAAD9AEnGM3WAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAOpQTFRF////5+fb5+fn7OzfwK3Aw7TDvqzB3t7U4d7U4t/V6eng5eXb4+LY2tjMl3eomXqqmnuqmnurm3yrnH2snX+tn4Gun4KvoIKvoYSwpIixpYm0rZO6r5a8r5e8sZm9spq+sp26tJzAtJ3At6O+uKLDuaa/uae/uqTFuqjAu6rBvKrBvqrIvqrJwKzKwLHEwa7Lw7HNxbTPxrjIybjSybnSy7vUzb3VzcLNz8HXz8XO0snQ08Xa08vR1s/S2dfK2s7g3NfX3djY3dnY4uHW49rn4+Dc4+Hc5OTa5uXe5+be5+bf5+ff6Ojg6engljgFSwAAAA50Uk5TABUVKDVESmRlaPL19v4X3HYWAAAAnUlEQVQYV13L1RKCUACE4VUU+9jdgd3d3bDv/zpegMj43+03s4DNSz2fBwAAydh8BNx/sA+4vrBQyePucvHbDVD4plYnKelw7HN7Y/VpQntFlVTWJmgtjs9s/i4sqXft1LbAk+RLs4CZBMCZtuQEIAvRyw5io06+3BWyDrPcoJGZ1A5zAwqbzLQ4XNYqVyEDcITisUhKJMLRYDLkwAeNCSm52IA4mwAAAABJRU5ErkJggg=='
+      };
+
+      // Icono por defecto
+      var defaultIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABCElEQVR4XmNgoCbQ0tJiU5SVb1aUl2+BYSU5hU5FWUU3dLVYgYKCgoCCnPxROTk5LSDbAITl5eUVFeXkPyjKyYWiq8cAIAOU5OXXo4sDDfgFxJ+U5OSc0eVQAMgARTmFVUCFPgpycnlKsvJFKioqfEDN/6H4L1DOBV0fHIC9ICu/VklJSQ7odENlOTljqLgGkK8J8hrQkNfo+uAA4gL5RUBX7ALS/9DwfwVZBX8g/QNdHxxADVijJCOjCww0V2QM1OwOlOcAyv9E1wcH1DKAMi8gByIaNgKpIcIFiGhExkqyCoVAeQkiDJBfjS6ODPAaoCUqygNU8BLogSfYMFDuKTCp30HXN7AAAKarYBD/VuTqAAAAAElFTkSuQmCC';
+
+      // agregamos el nuevo icono
+      element.querySelector('img.icon').setAttribute('src', (iconType[extension] || defaultIcon));
+
+      // agregamos la clase para no volver a procesar
+      element.classList.add('gas-custom-icon');
+    }
+  });
 }
 
 /**
@@ -810,7 +933,7 @@ function verifyKeyUp(cm) {
 
   // obtenemos el elemento de la lista de autocomplete
   var __isSuggestion = document.querySelector('#ctnJsAutocomplete .gas-item-selected');
-  console.log('__isSuggestion', __isSuggestion);
+
   // se valida que exista un elemento seleccionado
   if (!__isSuggestion) {
 
