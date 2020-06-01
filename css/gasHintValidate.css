@@ -1,3 +1,45 @@
+.CodeMirror-completions {
+  position: absolute;
+  z-index: 10;
+  overflow: hidden;
+  -webkit-box-shadow: 2px 3px 5px rgba(0,0,0,.2);
+  -moz-box-shadow: 2px 3px 5px rgba(0,0,0,.2);
+  box-shadow: 2px 3px 5px rgba(0,0,0,.2);
+}
+.CodeMirror-completions select {
+  background: #fafafa;
+  outline: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-family: monospace;
+}
+
+div.status-bar {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  -webkit-box-pack: justify;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+}
+
+div.status-bar .person-link{
+  padding: 3px 0 0 8px;
+}
+
+div.status-bar .person-link a{
+  font-size: 10px;
+  color: #807e7e;
+  letter-spacing: 1.1px;
+}
+
 #ctnJsAutocomplete {
   visibility: visible;
   position: absolute;

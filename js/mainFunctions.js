@@ -64,6 +64,14 @@ function initPageContent(evt) {
               $("<script>").attr('src', 'https://cdnjs.cloudflare.com/ajax/libs/jshint/2.11.0/jshint.js')
             );
 
+            $('head').append(
+              $("<script>").attr('src', 'https://codemirror.net/2/lib/util/foldcode.js')
+            );
+
+            /*$('head').append(
+              $("<script>").attr('src', 'https://codemirror.net/2/lib/util/simple-hint.js')
+            );*/
+
           }).catch((e) => {
 
             // Mostramos en consola el error

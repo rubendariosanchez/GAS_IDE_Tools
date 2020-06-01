@@ -1,4 +1,4 @@
-/**
+/** - https://codemirror.net/2/demo/complete.html
  * Creamos la clase de funciones personalizadas del editor, la trabajamos como prototipo para que funcione en todos las versiones de chrome
  */
 function GasTools(element) {
@@ -20,7 +20,7 @@ function GasTools(element) {
  * Establecemos las teclas que no aplican para el autocompletado
  */
 GasTools.prototype.notKeys = {
-  //"8": "backspace",
+  "8": "backspace",
   "9": "tab",
   "13": "enter",
   "16": "shift",
@@ -90,7 +90,8 @@ GasTools.prototype.init = function() {
 
     // se valida si es un archivo html
     if (extension == 'html') {
-
+      var foldFunc = CodeMirror.newFoldFunction(CodeMirror.braceRangeFinder);
+      var foldFunc_html = CodeMirror.newFoldFunction(CodeMirror.tagRangeFinder);
       // se ajusta la funcionalidad de la tecla superior o inferior
       this.editor.setOption("extraKeys", {
         "Up": function(cm) {
@@ -101,7 +102,7 @@ GasTools.prototype.init = function() {
           if (!__isSuggestionUp) {
 
             // se mueve el cursos a una determinada linea
-            return cm.execCommand('goLineUp'); //cm.moveV(-1, "line");
+            return cm.execCommand('goLineUp');
           }
         },
         "Down": function(cm) {
@@ -126,8 +127,10 @@ GasTools.prototype.init = function() {
             return cm.execCommand('newlineAndIndent');
           }
         },
-        "Ctrl-Space": function(cm) {
-          console.log('Enter', cm);
+        "Ctrl-Q": function(cm){
+          console.log('SIIIII')
+          foldFunc(cm, cm.getCursor().line);
+          foldFunc_html(cm, cm.getCursor().line);
         }
       });
     }
@@ -144,20 +147,20 @@ GasTools.prototype.init = function() {
 
         // Eliminamos cualquier menu de sugerencias de Google
         removeElementsByQuery('.gwt-PopupPanel.autocomplete:not(#ctnJsAutocomplete)');
-        if (event.keyCode == 32 && event.ctrlKey) return false;
+        
         // referenciamos el cursor y obtenemos el token
         var __Cursor = _this.editor.getCursor();
         var __Token = _this.editor.getTokenAt(__Cursor);
 
         // se valida que la tecla marcada no sea una de la lista y que no se aun tag o un elemento de html
-        if (event.ctrlKey == false && !_this.notKeys[(event.keyCode || event.which).toString()] && (__Token.className != "tag" && __Token.string != " " && __Token.string != "<" && __Token.string != "/")) {
-
+        if ((event.ctrlKey && event.keyCode == 32) && (event.ctrlKey == false && !_this.notKeys[(event.keyCode || event.which).toString()] && (__Token.className != "tag" && __Token.string != " " && __Token.string != "<" && __Token.string != "/"))) {
+          console.log('AQUI')
           // llama la función de autocompletado
-          _this.autocomplete(fileName);
+          _this.autocomplete();
 
         } else if (!__isSuggestion || (__isSuggestion && [38, 40].indexOf(event.keyCode) == -1)) { //Se valida si que no exista sugerencias o si existe que no sea la flecha de arriba o la de abajo
 
-          // Eliminamos cualquier menu de sugerencias de Google y las personalizas
+          // Eliminamos cualquier menu de sugerencias de Google y el de js
           removeElementsByQuery('.gwt-PopupPanel.autocomplete');
         }
       }
@@ -174,6 +177,13 @@ GasTools.prototype.init = function() {
   }
 
 };
+document.body.addEventListener('keydown', TriggeredKey);
+function TriggeredKey(e)
+{
+    var keycode;
+    if (window.event) keycode = window.event.keyCode;
+    if (window.event.keyCode != 13 ) return false;
+}
 
 /**
  * Creamos propiedad para almacenar la lista de palabras claves
@@ -193,24 +203,16 @@ GasTools.prototype.keywordsList = {
 /**
  * Método para autocompletar texto de js
  */
-GasTools.prototype.autocomplete = function(fileName) {
+GasTools.prototype.autocomplete = function() {
 
   // validamos si la instancia del editor existe
   if (this.editor) {
 
-    // obtenemos la extensión del archivo
-    var extension = fileName.replace(/^.*\./, '');
+    // mostramos el autocomplete de javascript
+    var suggestions = this.scriptHint(this.editor, this.keywordsList);
 
-    // validamos si la extensión es diferente de gs y html
-    if (extension == 'html') {
-
-      // mostramos el autocomplete de javascript
-      var suggestions = this.scriptHint(this.editor, this.keywordsList);
-
-      // mostramos las sugerencias
-      this.showHint(this.editor, suggestions);
-
-    }
+    // mostramos las sugerencias
+    this.showHint(this.editor, suggestions);
   }
 
 };
@@ -234,6 +236,12 @@ GasTools.prototype.showHint = function(editor, suggestions) {
 
   };
 
+  // Se valida si solo es una concurrencia se ingresa de una evz
+  if (suggestions.list.length == 1) {
+    //insert(completions[0]);
+    //return true;
+  }
+
   // obtenemos la posición del elemento
   var offset = getOffset(editor.getInputField());
 
@@ -241,14 +249,15 @@ GasTools.prototype.showHint = function(editor, suggestions) {
   var left = offset.left,
     top = (offset.top + 20);
 
+  // Obtenemos la altura de la pantalla
+  var windowHeight = window.innerHeight,
+      elementHeight = 202;
+
   // Se valida si ya existe el contenedor con el objetivo de no volver a crearlo
   var contentSuggestions = document.querySelector('#ctnJsAutocomplete');
 
   // referenciamos por si ya existe el elemento
   if (contentSuggestions) {
-
-    // establecemos la nueva posición
-    contentSuggestions.setAttribute("style", "left: " + left + "px; top: " + top + "px;");
 
     // obtenemos el contenedor actual
     var currentContentItems = document.querySelector('#ctnJsAutocomplete .scroll-wrapper div[role="menu"]');
@@ -258,13 +267,13 @@ GasTools.prototype.showHint = function(editor, suggestions) {
 
     // agregamos las sugerencias
     this.addSuggestions(editor, suggestions, currentContentItems);
+
   } else {
 
     // creamos el contenedor de las opciones
     contentSuggestions = document.createElement('div');
     contentSuggestions.setAttribute("id", "ctnJsAutocomplete");
     contentSuggestions.setAttribute("class", "gwt-PopupPanel autocomplete");
-    contentSuggestions.setAttribute("style", "left: " + left + "px; top: " + top + "px;");
 
     // creamos el contenedor secundario
     var contentSecondary = document.createElement('div');
@@ -291,7 +300,26 @@ GasTools.prototype.showHint = function(editor, suggestions) {
     contentSecondary.appendChild(contentScroll);
     contentSuggestions.appendChild(contentSecondary);
     document.body.appendChild(contentSuggestions);
+
   }
+
+  // obtenemos la altura del elemento
+  elementHeight = contentSuggestions.offsetHeight;
+
+  // validamos si el tamaño del elemento + el top del cursor es mayor que el tamaño de la ventana
+  if((top + elementHeight) > windowHeight){
+    
+    // Se valida si hay espacio en la parte superior del cursor
+    if(top - 20 > elementHeight){
+      top -= (elementHeight + 20);
+    }
+
+  }
+
+  // establecemos la nueva posición
+  contentSuggestions.setAttribute("style", "left: " + left + "px; top: " + top + "px;");
+
+  contentSuggestions.focus();
 }
 
 /**
@@ -309,7 +337,7 @@ GasTools.prototype.addSuggestions = function(editor, suggestions, contentItems) 
 
     // Agregamos el evento clic para que reemplacé los datos
     item.onclick = function(e) {
-
+    
       // obtenemos el texto
       var newText = e.target.innerHTML;
 
@@ -319,11 +347,15 @@ GasTools.prototype.addSuggestions = function(editor, suggestions, contentItems) 
       // actualizamos el valor
       editor.replaceRange(newText, suggestions.from, suggestions.to);
 
-      // Establecemos el focus en el editor
-      editor.focus();
+      // Establcemos el focus en el editor y el cursor al final de la linea
+      setTimeout(function(){
+        // Establecemos el focus en el editor
+        editor.focus();
 
-      // Colocamos el cursor en la nueva posición
-      editor.setCursor({ ch: newCh, line: suggestions.from.line });
+        // Colocamos el cursor en la nueva posición
+        editor.setCursor({ ch: newCh, line: suggestions.from.line });
+      }, 50);
+      
     };
 
     // Agregamos la clase a seleccionar y le damos focus
@@ -495,11 +527,11 @@ GasTools.prototype.getCompletions = function(token, context, keywordsList) {
 /**
  * Método crea el elemento para mostrar el error
  */
-GasTools.prototype.makeMarkerError = function(gutterElement, line, reasonList) {
+GasTools.prototype.makeMarkerError = function(editor, gutterElement, line, reasonList) {
 
   // referenciamos el elemento donde se debe mostrar el error
   var markerError = gutterElement.querySelector('pre:nth-child(' + line + ')');
-
+  
   // creamos el contenedor del mensaje
   var errorMessage = document.createElement('div');
   errorMessage.classList.add('gas-error-message');
@@ -538,16 +570,22 @@ GasTools.prototype.makeMarkerError = function(gutterElement, line, reasonList) {
   if (warningCount > 0 && errorCount == 0) {
 
     // Agregamos la clase de warning
-    markerError.classList.add('gas-warning-marker');
+    //markerError.classList.add('gas-warning-marker');
+    editor.setMarker(line, "●*", "errors");
+    //editor.setLineClass(line, 'gas-warning-marker', null);
 
   } else if (errorCount > 0 && warningCount > 0) { // errores y warnings
 
     // Agregamos la clase de multiple error
-    markerError.classList.add('gas-error-marker-multiple');
+    //markerError.classList.add('gas-error-marker-multiple');
+    editor.setMarker(line, "●*", "errors");
+    //editor.setLineClass(line, 'gas-error-marker-multiple', null);
   } else { // errores y warnings
 
     // Agregamos la clase de solo error
-    markerError.classList.add('gas-error-marker');
+    //markerError.classList.add('gas-error-marker');
+    editor.setMarker(line, "●*", "errors");
+    //editor.setLineClass(line, 'gas-error-marker-multiple', null);
   }
 }
 
@@ -596,7 +634,7 @@ GasTools.prototype.showErrorIde = function(fileName) {
   for (var line in groupErrors) {
 
     // mostramos el respectivo error
-    this.makeMarkerError(gutterElement, line, groupErrors[line]);
+    this.makeMarkerError(this.editor, gutterElement, line, groupErrors[line]);
   }
 
 };
@@ -630,11 +668,20 @@ GasTools.prototype.getValueByHtml = function(valueHtml) {
   // validamos si es null la cantidad de tags para salir de la función
   if (!scriptTags) return errors;
 
+  // Variable temporal para determinar si cumple con la condición
+  var tempMatch = null;
+
   // obtener todo el contenido de la etiqueta del script
   for (var i = 0; i < scriptTags.length; i++) {
 
-    // Agregamos el contenido de cada script
-    scriptContent.push(regexp.exec(scriptTags[0])[1]);
+    // Se valida la expresión
+    tempMatch = regexp.exec(scriptTags[0]);
+
+    // Si cumple y es mayor a 1
+    if(tempMatch && tempMatch.length > 1){
+      // Agregamos el contenido de cada script
+      scriptContent.push(tempMatch[1]);
+    }
   }
 
   // validamos si existe mas de un script en el documento
@@ -845,8 +892,9 @@ function setCustomIcons() {
  * Permite actualizar el icono de la lista de archivos
  */
 function updateCustomIcon() {
+
   // Recorremos cada uno de los items que no tienen el icono personalizado
-  document.querySelectorAll('.project-items-list>div:not(.gas-custom-icon)').forEach(function(element) {
+  document.querySelectorAll('.project-items-list>div').forEach(function(element) {
 
     // Obtenemos el nombre del archivo
     var fileName = element.getAttribute('aria-label');
@@ -860,8 +908,8 @@ function updateCustomIcon() {
       // definimos el icono para cada tipo de extensión
       var iconType = {
         'html': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAbwAAAG8B8aLcQwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAKWSURBVDiNjZM7aFNhFMd/J7k1XJObaIJpFRXUKgUdxJpSUVChqIOiiCA2o6I4WOpQKKhQF0EdFKylqAgK6uIiSDv4GGqxioiPQahtrYKPoqk098bEJjf3OMS0qTr4n77v4/xfBz5RVcoQkd3t7e0TwWBw/9jY2Jra2tr5ruuSSCReDAwMfOrp6env6+vrpgK+irPU1dWd7O3tvScizUNDQ3XxeDzS1dUVSSaTm4aHh5OxWKzTtu1WQMokf0dHB4A4jnN3fHx8fUtLi5imSTQapampiVwuR1tbG/l8nsHBQd/o6Oi2hoaGRCAQuAUgqopt263eyOtz/EjzX5ht4atdfTQcDp8X27ZXAC9zZw6YxZd9f80agZl3zwNZ3oh5/HoOWG2oarOImGJF/2lmzq1sDIUsuJEogCki+wwRqQeQSAyA0N5WZm9JTm/ZX0F+cpv8jdOUzVR1rQGUBMIlAVTxxxeSvXcLii5V5nQC78Mr1Js2A+oNESmoKr7fAt5ECoDMzbMUU1+wamZWUI+pWREpGEA/0FxO4KVLAvMuPwVVpIL888phvPs9+MNTCfqnBUqLoTD6hsztzinSrBD4YoswEjvRHxN/Vug3VPUBUBArWgWgbp5A/Waca6eYfP4QqwaMtTtKAnYKLYKEowAFVX1gWJb1NpPJHCES6wbQrEPVkpUEdx3CZ83BsIpUbdhX6u+kSgnCMUSkJRQKvUVVUVUcx7nwZc8y/by9RjN3Lmnh44iWUfz6XvMPr6p9YIF+3rVI0+l0Z5knFb/R/+3U/kfus/vrcPOlh+rFhKoNvG/vAHAnfRRWbH0879jVjYALzBAA4PuVk43Fj0MX9fvYUi/1KRwIZMULxrMaXTosC1cdih088bRy/heyQCYG+LP19AAAAABJRU5ErkJggg==',
-        'gs': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAeFBMVEUAAADQ0PrO0vvU2PvP0f3x8f7P0fzv7/7P0vzj5f3tv3r1uFP1uVXvvHHtvXHqwYfpvoLP0vzb3f3Y2v3////m6P3y8/7e4P3o6f7j5f3S1fzV2PzR0/zr7P7yu2H/sin/1If/2JL/zXX/w1j/2ZX/xFr/2JMAAACZakwFAAAAEXRSTlMAMURBe8S+wL+d4u/uu7lXdvBwsEwAAAABYktHRACIBR1IAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAB3RJTUUH5AUeDxEoVBeQPwAAAHxJREFUGNN1z9sSgiAQBuAtswg1kqI8Wyq+/yO2LIt043+xh2+GnQEA4HCkJMA5lT46ZTgzPJ4XD4KhNK9rgLfbsYgAlYMqgq6btm1qvUFn6EQXn/QO+r8bITsghy2SIBsxn++ENSPIcZoXu2LLCQqcrJ0stpv/jLpzFC4/H08NqmObH7EAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjAtMDUtMzBUMTU6MTc6NDArMDA6MDBGtCjqAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDIwLTA1LTMwVDE1OjE3OjQwKzAwOjAwN+mQVgAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAAASUVORK5CYII=',
-        'json': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAA3NCSVQICAjb4U/gAAAACXBIWXMAAAP0AAAD9AEnGM3WAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAOpQTFRF////5+fb5+fn7OzfwK3Aw7TDvqzB3t7U4d7U4t/V6eng5eXb4+LY2tjMl3eomXqqmnuqmnurm3yrnH2snX+tn4Gun4KvoIKvoYSwpIixpYm0rZO6r5a8r5e8sZm9spq+sp26tJzAtJ3At6O+uKLDuaa/uae/uqTFuqjAu6rBvKrBvqrIvqrJwKzKwLHEwa7Lw7HNxbTPxrjIybjSybnSy7vUzb3VzcLNz8HXz8XO0snQ08Xa08vR1s/S2dfK2s7g3NfX3djY3dnY4uHW49rn4+Dc4+Hc5OTa5uXe5+be5+bf5+ff6Ojg6engljgFSwAAAA50Uk5TABUVKDVESmRlaPL19v4X3HYWAAAAnUlEQVQYV13L1RKCUACE4VUU+9jdgd3d3bDv/zpegMj43+03s4DNSz2fBwAAydh8BNx/sA+4vrBQyePucvHbDVD4plYnKelw7HN7Y/VpQntFlVTWJmgtjs9s/i4sqXft1LbAk+RLs4CZBMCZtuQEIAvRyw5io06+3BWyDrPcoJGZ1A5zAwqbzLQ4XNYqVyEDcITisUhKJMLRYDLkwAeNCSm52IA4mwAAAABJRU5ErkJggg=='
+        'gs': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAALMSURBVDiNpZJNaFxlFIaf77vfnXvn3puZYYpjQichtmjjWAM1NUGobax0YUVoaYhSodaFO7ELKwgqiPgH0UVFpe6MtRUsuBFFNFQQrZhStGolhNZiq7XtpE1mJvNzv/vzuZCRbuJC3+U5nIdz3vPC/5T4t+Ztb+3tjZW81clGsz/uOdTs1h9+42pO9xY7RyeFXhEwNLV3fGP55s9HSmvsz66cunwmWho+u+fglYkD16Zu9y89GaF0O9u321oJMLB99MDU3Y9XBr1BhleVg0/Of8emrV9eHfV/n54cL4jhm2x17mJ7m7p+yPw0diNe3BFrT9aiJFpcWG7RX+zhwvkasZYPkAo3YxuUDaEG15HinxP0ibveacdbH5OyHgf548+t/7jym+f3fLA628/PS+cQnmXWt19ZHCxSXC2rxMqlbRffFgCNmQ2VjjNx+s9Vj6AsKC88g/bnvtg0MzSe9ig7jSAvh6nIRykGgrY25LKSwJVjEsCEaRyFhqwLUkLUiOmpR9s25JupNAalDAU9QuAKkvTv1zk288/v9GYVQO7+U/NLn3qvmfna/oxVI7BPgxDcU6g731/OYdkBeVHBsSGMwFYCy+JdANn1oLD926dyzExkO7MNYwtkVrD5hgZECUF8B3lPkaaQpOA7Ik2EfB9AmQf33bmczxyKnUzZn25pk2ulnfFfElNuWmtyIf22xko2ss6r0tQpoezFtjj24g7vAoCqx8sfVvc/O6ixufbmQX/gmzmcHwL0fSnR5jZjeRcnyrBj1AEBR76ugii9191capKSNjaeA7rUhzYpwi/gfDWAfbSPipEoE2IrSBPIOimtwP+oC7BeXkjS5cbSve0zf4jS4SO4tQai2cLU64hfQ26ZW2R6aAsLlyzOVqHTPHbxpcmRV7sAARDSW9Ey3aKE6UisJmCuT2jTd9XhfbseMj4nn3j69RdWiv9/0l/LcBLexRRK6AAAAABJRU5ErkJggg==',
+        'json': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABmJLR0QA/wD/AP+gvaeTAAAB0UlEQVRIidWUP28TQRDFf7PniNYYOkIqH0iRkAicO2jTQA01CB1OiYQESChCIAVosARFzlXCNyAVBQ0FBRKXL5DjT2GXCESHgd2hwIfPvvP5sEKR1+3svPd2dmYXDjpkMnC2u3cBla7AsRnEr6o8iNf8TlmeyRFVolniAAqHEZ4Em8m9GQcZRxAlChC3/dxeUd5Q5PG7tn+7KC9XwTxQuNWKkkf/zSA1CTaTG/tooG9yIeHuZKg2r3zcPnE+ux72pJH3pPpoVkQfI2EcNl/C8IqqjmZFLOK0my7M32AG6Yiq6Lox5qQKlwAFXqNyylldBl6NcvVZlgccnzSYAu+Fc25bVFrANxWuIfrceLKtwlqaJXZhA/hSpFBqIGo7OHtFVC1Q373ufwBWgNZu2Pw4OsfPy4LeL9IYnyKho8rF5tPkEIBidsTIWyfON2qunt76VGdg9xB1K1vvj6Y0RdY9z1uuUsHn7/bHmfqC3AQQ0YYYzhn1AoUjtYF9qCKrnmG1NmAjw2v8su5O4S0ABFHSY6LRJbD8aXjZG+rFbX9pVIGREOhXNPBmiQsSTt0NokSzP2VVTOPt22c3DUWl9oHFeaoAepOBfAX/1o8x8dK7P7D4DbAQoCI5kqtLAAAAAElFTkSuQmCC'
       };
 
       // Icono por defecto

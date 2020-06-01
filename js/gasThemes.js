@@ -52,6 +52,13 @@ function settingModuleTheme(contentHtml) {
 
   // Consultamos las propiedades de la cuenta de usuario para agregar la clase respectiva
   updateThemeIdeGas(false, 1);
+
+  // Agregamos el vínculo del código fuente
+  $('.status-bar').append(
+    $('<div>').attr({class: 'person-link'}).append(
+      $('<a>').attr({href: 'https://github.com/rubendariosanchez/', target: '_blank'}).text('@RubénS.')
+    )
+  );
 }
 
 /**
