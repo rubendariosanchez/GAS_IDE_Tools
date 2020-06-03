@@ -88,10 +88,21 @@ GasTools.prototype.init = function() {
     // obtenemos la extensión del archivo
     var extension = fileName.replace(/^.*\./, '');
 
+    // Permite identificar el tipo de lenguaje a verificar en este caso es JS, GS y JSON
+    var foldFunc = CodeMirror.newFoldFunction(CodeMirror.braceRangeFinder);
+
+    // Se establece la combinación de teclas Ctrl+Alt+Q
+    this.editor.setOption("extraKeys", {
+      "Alt-Q": function(cm) {
+
+        // Se procede a ejecutar la función
+        foldFunc(cm, cm.getCursor().line);
+      }
+    });
+
     // se valida si es un archivo html
     if (extension == 'html') {
-      var foldFunc = CodeMirror.newFoldFunction(CodeMirror.braceRangeFinder);
-      var foldFunc_html = CodeMirror.newFoldFunction(CodeMirror.tagRangeFinder);
+
       // se ajusta la funcionalidad de la tecla superior o inferior
       this.editor.setOption("extraKeys", {
         "Up": function(cm) {
@@ -126,37 +137,34 @@ GasTools.prototype.init = function() {
             // se mueve el cursos a una determinada linea
             return cm.execCommand('newlineAndIndent');
           }
-        },
-        "Ctrl-Q": function(cm){
-          console.log('SIIIII')
-          foldFunc(cm, cm.getCursor().line);
-          foldFunc_html(cm, cm.getCursor().line);
         }
       });
     }
 
-
     // agregamos un evento al área de textos del editor
     this.editor.getInputField().addEventListener('keyup', function(event) {
-      console.log(event);
+
       // se valida si es un archivo html
       if (extension == 'html') {
 
         // obtenemos el elemento de la lista de autocomplete
         var __isSuggestion = document.querySelector('#ctnJsAutocomplete .gas-item-selected');
 
-        // Eliminamos cualquier menu de sugerencias de Google
-        removeElementsByQuery('.gwt-PopupPanel.autocomplete:not(#ctnJsAutocomplete)');
-        
         // referenciamos el cursor y obtenemos el token
         var __Cursor = _this.editor.getCursor();
         var __Token = _this.editor.getTokenAt(__Cursor);
 
         // se valida que la tecla marcada no sea una de la lista y que no se aun tag o un elemento de html
-        if ((event.ctrlKey && event.keyCode == 32) && (event.ctrlKey == false && !_this.notKeys[(event.keyCode || event.which).toString()] && (__Token.className != "tag" && __Token.string != " " && __Token.string != "<" && __Token.string != "/"))) {
-          console.log('AQUI')
-          // llama la función de autocompletado
-          _this.autocomplete();
+        if ((event.ctrlKey && event.keyCode == 32) || (event.ctrlKey == false && !_this.notKeys[(event.keyCode || event.which).toString()] && (__Token.className != "tag" && __Token.string != " " && __Token.string != "<" && __Token.string != "/"))) {
+
+          setTimeout(function() {
+
+            // Eliminamos cualquier menu de sugerencias de Google
+            removeElementsByQuery('.gwt-PopupPanel.autocomplete:not(#ctnJsAutocomplete)');
+
+            // llama la función de autocompletado
+            _this.autocomplete();
+          }, 100);
 
         } else if (!__isSuggestion || (__isSuggestion && [38, 40].indexOf(event.keyCode) == -1)) { //Se valida si que no exista sugerencias o si existe que no sea la flecha de arriba o la de abajo
 
@@ -177,13 +185,6 @@ GasTools.prototype.init = function() {
   }
 
 };
-document.body.addEventListener('keydown', TriggeredKey);
-function TriggeredKey(e)
-{
-    var keycode;
-    if (window.event) keycode = window.event.keyCode;
-    if (window.event.keyCode != 13 ) return false;
-}
 
 /**
  * Creamos propiedad para almacenar la lista de palabras claves
@@ -251,7 +252,7 @@ GasTools.prototype.showHint = function(editor, suggestions) {
 
   // Obtenemos la altura de la pantalla
   var windowHeight = window.innerHeight,
-      elementHeight = 202;
+    elementHeight = 202;
 
   // Se valida si ya existe el contenedor con el objetivo de no volver a crearlo
   var contentSuggestions = document.querySelector('#ctnJsAutocomplete');
@@ -307,10 +308,10 @@ GasTools.prototype.showHint = function(editor, suggestions) {
   elementHeight = contentSuggestions.offsetHeight;
 
   // validamos si el tamaño del elemento + el top del cursor es mayor que el tamaño de la ventana
-  if((top + elementHeight) > windowHeight){
-    
+  if ((top + elementHeight) > windowHeight) {
+
     // Se valida si hay espacio en la parte superior del cursor
-    if(top - 20 > elementHeight){
+    if (top - 20 > elementHeight) {
       top -= (elementHeight + 20);
     }
 
@@ -337,7 +338,7 @@ GasTools.prototype.addSuggestions = function(editor, suggestions, contentItems) 
 
     // Agregamos el evento clic para que reemplacé los datos
     item.onclick = function(e) {
-    
+
       // obtenemos el texto
       var newText = e.target.innerHTML;
 
@@ -348,14 +349,14 @@ GasTools.prototype.addSuggestions = function(editor, suggestions, contentItems) 
       editor.replaceRange(newText, suggestions.from, suggestions.to);
 
       // Establcemos el focus en el editor y el cursor al final de la linea
-      setTimeout(function(){
+      setTimeout(function() {
         // Establecemos el focus en el editor
         editor.focus();
 
         // Colocamos el cursor en la nueva posición
         editor.setCursor({ ch: newCh, line: suggestions.from.line });
       }, 50);
-      
+
     };
 
     // Agregamos la clase a seleccionar y le damos focus
@@ -524,70 +525,6 @@ GasTools.prototype.getCompletions = function(token, context, keywordsList) {
   return found;
 }
 
-/**
- * Método crea el elemento para mostrar el error
- */
-GasTools.prototype.makeMarkerError = function(editor, gutterElement, line, reasonList) {
-
-  // referenciamos el elemento donde se debe mostrar el error
-  var markerError = gutterElement.querySelector('pre:nth-child(' + line + ')');
-  
-  // creamos el contenedor del mensaje
-  var errorMessage = document.createElement('div');
-  errorMessage.classList.add('gas-error-message');
-  markerError.appendChild(errorMessage);
-
-  // variables que determinan si warnins o errores
-  var warningCount = 0,
-    errorCount = 0;
-
-  // creamos un ciclo para agregar las razones
-  for (var i = 0; i < reasonList.length; i++) {
-
-    // creamso el contenedor del error
-    var divReason = document.createElement('div');
-    divReason.innerHTML = reasonList[i].reason;
-    errorMessage.appendChild(divReason);
-
-    // validamos si es un warning
-    if (reasonList[i].severity == 'warning') {
-
-      // aumentamos el contador de warnings
-      warningCount++;
-
-      // agregamos la clase al elemento para mostrar icono
-      divReason.classList.add('gas-warning-item');
-    } else {
-      // aumentamos el contador de errores
-      errorCount++;
-
-      // agregamos la clase al elemento para mostrar icono
-      divReason.classList.add('gas-error-item');
-    }
-  }
-
-  // validamos si solo existe warnings
-  if (warningCount > 0 && errorCount == 0) {
-
-    // Agregamos la clase de warning
-    //markerError.classList.add('gas-warning-marker');
-    editor.setMarker(line, "●*", "errors");
-    //editor.setLineClass(line, 'gas-warning-marker', null);
-
-  } else if (errorCount > 0 && warningCount > 0) { // errores y warnings
-
-    // Agregamos la clase de multiple error
-    //markerError.classList.add('gas-error-marker-multiple');
-    editor.setMarker(line, "●*", "errors");
-    //editor.setLineClass(line, 'gas-error-marker-multiple', null);
-  } else { // errores y warnings
-
-    // Agregamos la clase de solo error
-    //markerError.classList.add('gas-error-marker');
-    editor.setMarker(line, "●*", "errors");
-    //editor.setLineClass(line, 'gas-error-marker-multiple', null);
-  }
-}
 
 /**
  * Método que permite mostrar los errores en el editor
@@ -624,20 +561,43 @@ GasTools.prototype.showErrorIde = function(fileName) {
   // obtenemos el contenedor de los números de lineas
   var gutterElement = this.editor.getGutterElement().querySelector('div.CodeMirror-gutter-text');
 
-  // Eliminamos cada uno de los errores existentes
-  this.clearErrors(gutterElement);
+  // obtenemos la lista de errores agrupados y la clase a establecer
+  var errorsData = this.groupErrors(errors);
 
-  // obtenemos la lista de errores agrupados
-  var groupErrors = this.groupErrors(errors);
+  // referenciamos el tab activo
+  var activeTab = document.querySelector('.gwt-TabLayoutPanelTab-selected .tab-header');
 
-  // se recorre cada uno de los errores
-  for (var line in groupErrors) {
+  // validamos si existe una pestaña activa
+  if (activeTab) {
 
-    // mostramos el respectivo error
-    this.makeMarkerError(this.editor, gutterElement, line, groupErrors[line]);
+    // Eliminamos cada uno de los errores existentes
+    this.clearErrors(activeTab);
+
+    // se valida si existe errores para mostrar
+    if (Object.keys(errorsData.errorsList).length > 0) {
+
+      // almacenamos los datos de errores
+      this.setMakerError(activeTab, errorsData);
+    }
   }
 
 };
+
+/**
+ * Método crea el elemento para mostrar el error
+ */
+GasTools.prototype.setMakerError = function(activeTab, errorsData) {
+
+  // creamos la opción del error a mostrar
+  var errorOption = document.createElement('span');
+  errorOption.classList.add(errorsData.className);
+  errorOption.title = 'Haz clic para ver los errores.';
+  activeTab.prepend(errorOption);
+
+  // Agregamamos el evento al elemento
+  new PopoverGas(errorOption, errorsData.errorsList);
+}
+
 
 /**
  * Permite agrupar los errores de acuerdo a una linea
@@ -678,7 +638,7 @@ GasTools.prototype.getValueByHtml = function(valueHtml) {
     tempMatch = regexp.exec(scriptTags[0]);
 
     // Si cumple y es mayor a 1
-    if(tempMatch && tempMatch.length > 1){
+    if (tempMatch && tempMatch.length > 1) {
       // Agregamos el contenido de cada script
       scriptContent.push(tempMatch[1]);
     }
@@ -734,7 +694,13 @@ GasTools.prototype.groupErrors = function(errors) {
   errors = errors || [];
 
   // creamos variable para retornar la lista de errores
-  var errorObject = {};
+  var errorsList = {},
+    className = 'gas-error-marker',
+    severityTemp = '';
+
+  // variables que determinan si warnins o errores
+  var warningCount = 0,
+    errorCount = 0;
 
   // recorremos cada una de la lista
   for (var i = 0; i < errors.length; i++) {
@@ -743,58 +709,78 @@ GasTools.prototype.groupErrors = function(errors) {
     if (errors[i].line && errors[i].reason) {
 
       // validamos si aun no existe una propiedad asociada a la linea
-      if (!errorObject[errors[i].line]) {
+      if (!errorsList[errors[i].line]) {
 
         // inicializamos la propiedad
-        errorObject[errors[i].line] = [];
+        errorsList[errors[i].line] = [];
+      }
+
+      // obtenemos el tipo de error
+      severityTemp = errors[i].code ? (errors[i].code.startsWith('W') ? "warning" : "error") : "error";
+
+      // se valida si es error
+      if (severityTemp == 'error') {
+        // aumentamos el contador de errores
+        errorCount++;
+      } else {
+        // aumentamos el contador de warnings
+        warningCount++;
       }
 
       // agregamos la razon en la línea respectiva
-      errorObject[errors[i].line].push({
-        severity: errors[i].code ? (errors[i].code.startsWith('W') ? "warning" : "error") : "error",
+      errorsList[errors[i].line].push({
+        severity: severityTemp,
         reason: errors[i].reason
       });
-
     }
 
   }
 
+  // validamos si solo existe warnings
+  if (warningCount > 0 && errorCount == 0) {
+
+    // Agregamos la clase de warning
+    className = 'gas-warning-marker';
+
+  } else if (errorCount > 0 && warningCount > 0) { // errores y warnings
+
+    // Agregamos la clase de multiple error
+    className = 'gas-error-marker-multiple';
+  }
+
   // retornamos el objeto
-  return errorObject;
+  return {
+    className: className,
+    errorsList: errorsList
+  };
 }
 
 /**
  * Eliminamos los errores de la lista de errores del archivo actual
  */
-GasTools.prototype.clearErrors = function(gutterElement) {
+GasTools.prototype.clearErrors = function(activeTab) {
 
   // Eliminamos todos los elementos que tienes la clase 'gas-error-marker'
-  gutterElement.querySelectorAll('.gas-error-marker').forEach(function(el) {
-
-    // se remueve cada la clase del elemento
-    el.classList.remove('gas-error-marker');
-  });
-
-  // Eliminamos todos los elementos que tienes la clase 'gas-warning-marker'
-  gutterElement.querySelectorAll('.gas-warning-marker').forEach(function(el) {
-
-    // se remueve cada la clase del elemento
-    el.classList.remove('gas-warning-marker');
-  });
-
-  // Eliminamos todos los elementos que tienes la clase 'gas-error-marker-multiple'
-  gutterElement.querySelectorAll('.gas-error-marker-multiple').forEach(function(el) {
-
-    // se remueve cada la clase del elemento
-    el.classList.remove('gas-error-marker-multiple');
-  });
-
-  // Eliminamos todos los elementos que tienes la clase 'gas-error-message'
-  gutterElement.querySelectorAll('.gas-error-message').forEach(function(el) {
+  activeTab.querySelectorAll('.gas-error-marker').forEach(function(el) {
 
     // se remueve cada elemento
     el.remove();
   });
+
+  // Eliminamos todos los elementos que tienes la clase 'gas-warning-marker'
+  activeTab.querySelectorAll('.gas-warning-marker').forEach(function(el) {
+
+    // se remueve cada elemento
+    el.remove();
+  });
+
+  // Eliminamos todos los elementos que tienes la clase 'gas-error-marker-multiple'
+  activeTab.querySelectorAll('.gas-error-marker-multiple').forEach(function(el) {
+
+    // se remueve cada elemento
+    el.remove();
+  });
+
 }
 
 // se llama la función que inicializar el Ide personalizado

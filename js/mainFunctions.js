@@ -44,12 +44,18 @@ function initPageContent(evt) {
             $.get(chrome.runtime.getURL('html/options.html')),
             $.get(chrome.runtime.getURL('html/menu.html')),
             $.get(chrome.runtime.getURL('css/gasThemes.css')),
-            $.get(chrome.runtime.getURL('css/gasHintValidate.css'))
+            $.get(chrome.runtime.getURL('css/gasStylesheet.css'))
           ])
           .then((content) => {
 
             // agregamos el campo de opciones de temas
             settingModuleTheme(content);
+
+            // agregamos el script con la funcionalidad de ocultar filas
+            addScriptInPage('js/foldCode.js');
+
+            // agregamos el script con la clase del Popover
+            addScriptInPage('js/popover.js');
 
             // agregamos el script que administra las funciones personalizadas
             addScriptInPage('js/gasTools.js');
@@ -63,14 +69,6 @@ function initPageContent(evt) {
             $('head').append(
               $("<script>").attr('src', 'https://cdnjs.cloudflare.com/ajax/libs/jshint/2.11.0/jshint.js')
             );
-
-            $('head').append(
-              $("<script>").attr('src', 'https://codemirror.net/2/lib/util/foldcode.js')
-            );
-
-            /*$('head').append(
-              $("<script>").attr('src', 'https://codemirror.net/2/lib/util/simple-hint.js')
-            );*/
 
           }).catch((e) => {
 

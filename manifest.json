@@ -28,14 +28,17 @@
   }],
   "web_accessible_resources": [
     "js/gasTools.js",
+    "js/popover.js",
+    "js/foldCode.js",
     "html/options.html",
     "html/menu.html",
     "css/gasThemes.css",
-    "css/gasHintValidate.css"
+    "css/gasStylesheet.css"
   ],
   "browser_action": {
     "default_title": "GAS IDE Tools",
-    "default_icon": "assets/icon_128.png"
+    "default_icon": "assets/icon_128.png",
+    "default_popup": "html/popup.html"
   },
   "content_security_policy": "script-src 'self'; object-src 'self'",
   "permissions": [
