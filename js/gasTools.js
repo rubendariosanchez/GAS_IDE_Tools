@@ -149,27 +149,35 @@ GasTools.prototype.init = function() {
 
         // obtenemos el elemento de la lista de autocomplete
         var __isSuggestion = document.querySelector('#ctnJsAutocomplete .gas-item-selected');
+        var __isSuggestionGoogle = document.querySelector('.gwt-PopupPanel.autocomplete:not(#ctnJsAutocomplete)');
 
         // referenciamos el cursor y obtenemos el token
         var __Cursor = _this.editor.getCursor();
         var __Token = _this.editor.getTokenAt(__Cursor);
 
-        // se valida que la tecla marcada no sea una de la lista y que no se aun tag o un elemento de html
-        if ((event.ctrlKey && event.keyCode == 32) || (event.ctrlKey == false && !_this.notKeys[(event.keyCode || event.which).toString()] && (__Token.className != "tag" && __Token.string != " " && __Token.string != "<" && __Token.string != "/"))) {
-
-          setTimeout(function() {
-
-            // Eliminamos cualquier menu de sugerencias de Google
-            removeElementsByQuery('.gwt-PopupPanel.autocomplete:not(#ctnJsAutocomplete)');
+        // Validamosque que no exista el panel de ayuda de google
+        if (!__isSuggestionGoogle) {
+          console.log(event)
+          console.log('__Token', __Token);
+          console.log('ITEM 1: ' + (event.ctrlKey && event.keyCode == 32));
+          console.log('ITEM 1: ' + (event.ctrlKey == false && !_this.notKeys[(event.keyCode || event.which).toString()] && (__Token.className != "tag" && __Token.string != " " && __Token.string != "<" && __Token.string != "/")));
+          // se valida que la tecla marcada no sea una de la lista y que no se aun tag o un elemento de html
+          if ((event.ctrlKey && event.keyCode == 32) || (event.ctrlKey == false && !_this.notKeys[(event.keyCode || event.which).toString()] && (__Token.className != "tag" && / |<|\/|\(|\)/.test(__Token.string) == false && event.altKey == false))) {
 
             // llama la función de autocompletado
             _this.autocomplete();
-          }, 100);
 
-        } else if (!__isSuggestion || (__isSuggestion && [38, 40].indexOf(event.keyCode) == -1)) { //Se valida si que no exista sugerencias o si existe que no sea la flecha de arriba o la de abajo
+          } else if (__isSuggestion && (([38, 40, 16, 17, 18].indexOf(event.keyCode) == -1))) { //Se valida si que no exista sugerencias o si existe que no sea la flecha de arriba o la de abajo
 
-          // Eliminamos cualquier menu de sugerencias de Google y el de js
-          removeElementsByQuery('.gwt-PopupPanel.autocomplete');
+            // Eliminamos cualquier menu de sugerencias personalizado de
+            removeElementsByQuery('#ctnJsAutocomplete');
+          }
+
+        } else if (__isSuggestion) { // Si existe el de Google y tambien el personalizado
+
+          // Removemos ese panel para que no moleste
+          removeElementsByQuery('#ctnJsAutocomplete');
+
         }
       }
 
@@ -222,9 +230,6 @@ GasTools.prototype.autocomplete = function() {
  * Método para obtener os datos necesario para mostrar el autocompletable
  */
 GasTools.prototype.showHint = function(editor, suggestions) {
-
-  // Eliminamos cualquier instancia que muestre un autocomplete
-  removeElementsByQuery('.gwt-PopupPanel.autocomplete:not(#ctnJsAutocomplete)');
 
   // validamos si no hay necesidad de mostrar las sugerencias
   if (!suggestions || suggestions.list.length == 0) {

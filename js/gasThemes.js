@@ -55,8 +55,8 @@ function settingModuleTheme(contentHtml) {
 
   // Agregamos el vínculo del código fuente
   $('.status-bar').append(
-    $('<div>').attr({ class: 'person-link', title: 'Para Mostrar/Ocultar bloques de líneas solo se debe posicionar en el inicio de bloque y oprimir la combinación de teclas: Ctrl+Alt+Q' }).append(
-      'Ctrl+Alt+Q para mostrar/ocultar bloques de líneas'
+    $('<div>').attr({ class: 'person-link', title: 'Para Mostrar/Ocultar bloques de líneas solo se debe posicionar en el inicio de bloque y oprimir la combinación de teclas: Alt+Q' }).append(
+      'Alt+Q para mostrar/ocultar bloques de líneas'
     )
   ).append(
     $('<div>').attr({ class: 'person-link' }).append(
