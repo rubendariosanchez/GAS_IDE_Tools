@@ -1,10 +1,8 @@
 /** - https://codemirror.net/2/demo/complete.html
+ *  - https://shields.io/
  * Creamos la clase de funciones personalizadas del editor, la trabajamos como prototipo para que funcione en todos las versiones de chrome
  */
 function GasTools(element) {
-
-  // definimos una variable que determina que esa va a ser la principal de la clase
-  // var _this = this;
 
   // referenciamos el editor de Google Apps Script
   this.editor = element.CodeMirror;
@@ -91,15 +89,6 @@ GasTools.prototype.init = function() {
     // Permite identificar el tipo de lenguaje a verificar en este caso es JS, GS y JSON
     var foldFunc = CodeMirror.newFoldFunction(CodeMirror.braceRangeFinder);
 
-    // Se establece la combinación de teclas Ctrl+Alt+Q
-    this.editor.setOption("extraKeys", {
-      "Alt-Q": function(cm) {
-
-        // Se procede a ejecutar la función
-        foldFunc(cm, cm.getCursor().line);
-      }
-    });
-
     // se valida si es un archivo html
     if (extension == 'html') {
 
@@ -137,6 +126,21 @@ GasTools.prototype.init = function() {
             // se mueve el cursos a una determinada linea
             return cm.execCommand('newlineAndIndent');
           }
+        },
+        "Alt-Q": function(cm) {
+
+          // Se procede a ejecutar la función
+          foldFunc(cm, cm.getCursor().line);
+        }
+      });
+    } else {
+
+      // Se establece la combinación de teclas Ctrl+Alt+Q
+      this.editor.setOption("extraKeys", {
+        "Alt-Q": function(cm) {
+
+          // Se procede a ejecutar la función
+          foldFunc(cm, cm.getCursor().line);
         }
       });
     }
@@ -155,14 +159,14 @@ GasTools.prototype.init = function() {
         var __Cursor = _this.editor.getCursor();
         var __Token = _this.editor.getTokenAt(__Cursor);
 
+        // obtenemos la validaciòn si es una teclas no alfanumerica
+        var __isSpecialKey = _this.notKeys[(event.keyCode || event.which).toString()];
+
         // Validamosque que no exista el panel de ayuda de google
         if (!__isSuggestionGoogle) {
-          console.log(event)
-          console.log('__Token', __Token);
-          console.log('ITEM 1: ' + (event.ctrlKey && event.keyCode == 32));
-          console.log('ITEM 1: ' + (event.ctrlKey == false && !_this.notKeys[(event.keyCode || event.which).toString()] && (__Token.className != "tag" && __Token.string != " " && __Token.string != "<" && __Token.string != "/")));
+
           // se valida que la tecla marcada no sea una de la lista y que no se aun tag o un elemento de html
-          if ((event.ctrlKey && event.keyCode == 32) || (event.ctrlKey == false && !_this.notKeys[(event.keyCode || event.which).toString()] && (__Token.className != "tag" && / |<|\/|\(|\)/.test(__Token.string) == false && event.altKey == false))) {
+          if ((event.ctrlKey && event.keyCode == 32) || (event.ctrlKey == false && !__isSpecialKey && (__Token.className != "tag" && / |<|\/|\(|\)|\{|\}/.test(__Token.string) == false && event.altKey == false))) {
 
             // llama la función de autocompletado
             _this.autocomplete();
@@ -182,7 +186,7 @@ GasTools.prototype.init = function() {
       }
 
       //Realizamos el siguiente proceso si no son flechas o un comando de 2 teclas o mas
-      if ([37, 38, 39, 40, 17, 27].indexOf(event.keyCode) == -1 && event.ctrlKey == false) {
+      if ([37, 38, 39, 40, 17, 27].indexOf(event.keyCode) == -1 && !__isSpecialKey) {
 
         // se muestra el error cada vez que se escribe algo
         _this.showErrorIde(fileName);
@@ -241,12 +245,6 @@ GasTools.prototype.showHint = function(editor, suggestions) {
     return false;
 
   };
-
-  // Se valida si solo es una concurrencia se ingresa de una evz
-  if (suggestions.list.length == 1) {
-    //insert(completions[0]);
-    //return true;
-  }
 
   // obtenemos la posición del elemento
   var offset = getOffset(editor.getInputField());
@@ -324,8 +322,6 @@ GasTools.prototype.showHint = function(editor, suggestions) {
 
   // establecemos la nueva posición
   contentSuggestions.setAttribute("style", "left: " + left + "px; top: " + top + "px;");
-
-  contentSuggestions.focus();
 }
 
 /**

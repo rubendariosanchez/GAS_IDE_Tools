@@ -1,11 +1,16 @@
 .line-selected:after {
-  content: 'Ctrl+Alt+Q para mostrar bloques de líneas';
-  width: 2px;
-  padding: 0 2px;
+  content: '⇿';
+  border-radius: 2px;
+  padding: 2px 4px;
+  font-size: 13px;
   margin-left: 5px;
-  background-color: #08f;
+  background-color: #455b73;
   color: #fff;
-  cursor: default;
+  cursor: text;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 

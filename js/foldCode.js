@@ -3,6 +3,7 @@
 
 // Permite agregar un metodo al editor el cual permite verificar la apertura de una función o de un objeto teniedno como base la apertura o cierre de una llave
 CodeMirror.braceRangeFinder = function(cm, line, hideEnd) {
+
   var lineText = cm.getLine(line),
     at = lineText.length,
     startChar, tokenType;
@@ -38,7 +39,6 @@ CodeMirror.braceRangeFinder = function(cm, line, hideEnd) {
   if (hideEnd === true) end++;
   return end;
 };
-
 
 /**
  * Se establece una nueva función para el manejo de mostrar u ocultar filas de un bloque de código JS
