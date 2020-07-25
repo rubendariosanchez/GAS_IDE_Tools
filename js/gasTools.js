@@ -166,7 +166,8 @@ GasTools.prototype.init = function() {
         if (!__isSuggestionGoogle) {
 
           // se valida que la tecla marcada no sea una de la lista y que no se aun tag o un elemento de html
-          if ((event.ctrlKey && event.keyCode == 32) || (event.ctrlKey == false && !__isSpecialKey && (__Token.className != "tag" && / |<|\/|\(|\)|\{|\}/.test(__Token.string) == false && event.altKey == false))) {
+          //if ((event.ctrlKey && event.keyCode == 32) || (event.ctrlKey == false && !__isSpecialKey && (__Token.className != "tag" && / |<|\/|\(|\)|\{|\}/.test(__Token.string) == false && event.altKey == false))) {
+          if ((event.ctrlKey && event.keyCode == 32) && (__Token.className != "tag" && / |<|\/|\(|\)|\{|\}\(\)/.test(__Token.string) == false && event.altKey == false)) {
 
             // llama la función de autocompletado
             _this.autocomplete();
@@ -604,7 +605,7 @@ GasTools.prototype.setMakerError = function(activeTab, errorsData) {
  * Permite agrupar los errores de acuerdo a una linea
  */
 GasTools.prototype.getValueByHtml = function(valueHtml) {
-
+  
   // variable para recopilar ls errores
   var errors = [];
 
@@ -620,11 +621,8 @@ GasTools.prototype.getValueByHtml = function(valueHtml) {
     }
   });
 
-  // definimos la expresión regular que permite obtener el contenido dentro de un script
-  var regexp = /<script\b[^>]*>([\s\S]*?)<\/script>/gm;
-
   // obtenemos la cantidad de etiquetas
-  var scriptTags = valueHtml.match(regexp);
+  var scriptTags = valueHtml.match(/<script\b[^>]*>([\s\S]*?)<\/script>/gm);
 
   // validamos si es null la cantidad de tags para salir de la función
   if (!scriptTags) return errors;
@@ -636,10 +634,11 @@ GasTools.prototype.getValueByHtml = function(valueHtml) {
   for (var i = 0; i < scriptTags.length; i++) {
 
     // Se valida la expresión
-    tempMatch = regexp.exec(scriptTags[0]);
+    tempMatch = /<script\b[^>]*>([\s\S]*?)<\/script>/gm.exec(scriptTags[i]);
 
     // Si cumple y es mayor a 1
     if (tempMatch && tempMatch.length > 1) {
+
       // Agregamos el contenido de cada script
       scriptContent.push(tempMatch[1]);
     }
@@ -676,7 +675,9 @@ GasTools.prototype.getValueByHtml = function(valueHtml) {
 
           });
         }
-      } catch (e) {}
+      } catch (e) {
+        console.log('error:', e);
+      }
     });
   }
 

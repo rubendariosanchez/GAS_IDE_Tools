@@ -1,7 +1,7 @@
 .line-selected:after {
   content: '⇿';
   border-radius: 2px;
-  padding: 2px 4px;
+  padding: 0px 4px 0px 4px;
   font-size: 13px;
   margin-left: 5px;
   background-color: #455b73;

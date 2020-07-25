@@ -60,7 +60,7 @@ function settingModuleTheme(contentHtml) {
     )
   ).append(
     $('<div>').attr({ class: 'person-link' }).append(
-      $('<a>').attr({ href: 'https://github.com/rubendariosanchez/', target: '_blank' }).text('@RubénS.')
+      $('<a>').attr({ href: 'https://rubendariosanchez.github.io/#/about', target: '_blank' }).text('@RubénS.')
     )
   );
 }

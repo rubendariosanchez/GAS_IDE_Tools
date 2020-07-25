@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "manifest_version": 2,
   "author": "Rubén Sánchez",
-  "description": "Es una extensión que agrega funcionalidades adicionales al entornos de Google Apps Script.",
+  "description": "Es una extensión que agrega funcionalidades al entorno de desarrollo de Google Apps Script.",
   "icons": {
     "16": "/assets/icon_16.png",
     "48": "/assets/icon_48.png",
@@ -37,8 +37,7 @@
   ],
   "browser_action": {
     "default_title": "Google Apps Script Custom IDE",
-    "default_icon": "assets/icon_128.png",
-    "default_popup": "html/popup.html"
+    "default_icon": "assets/icon_128.png"
   },
   "content_security_policy": "script-src 'self'; object-src 'self'",
   "permissions": [
